@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>｜けしゴム — パイプ文字除去ツール</title>
+<style>
+  :root{
+    --bg:#141019; --panel:#1d1826; --panel2:#241d33;
+    --text:#ece7f5; --sub:#9f93b8; --accent:#c9a6ff; --accent2:#7ce0c6;
+    --border:#352b47;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    padding:32px 16px 48px;
+  }
+  .wrap{width:100%; max-width:960px;}
+  header{margin-bottom:20px;}
+  h1{
+    font-size:1.5rem; margin:0 0 4px; letter-spacing:.02em;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    display:inline-block;
+  }
+  p.desc{color:var(--sub); margin:0; font-size:.92rem; line-height:1.6;}
+  .grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px;
+  }
+  @media (max-width:720px){ .grid{grid-template-columns:1fr;} }
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:14px; display:flex; flex-direction:column; min-height:360px;
+  }
+  .panel h2{
+    font-size:.82rem; margin:0 0 8px; color:var(--sub); font-weight:600;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .panel h2 .count{color:var(--accent2); font-variant-numeric:tabular-nums;}
+  textarea{
+    flex:1; resize:vertical; min-height:320px; width:100%;
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:12px; font-size:.95rem; line-height:1.65;
+    font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  textarea[readonly]{opacity:.95;}
+  .toolbar{
+    display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center;
+  }
+  button{
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    padding:9px 16px; border-radius:8px; cursor:pointer; font-size:.88rem;
+    transition:border-color .15s, transform .1s;
+  }
+  button:hover{border-color:var(--accent);}
+  button:active{transform:scale(.97);}
+  button.primary{
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#181022;
+    border:none; font-weight:600;
+  }
+  .status{color:var(--sub); font-size:.85rem; margin-left:auto;}
+  .status.ok{color:var(--accent2);}
+  footer{margin-top:22px; color:var(--sub); font-size:.78rem; line-height:1.7;}
+  code{background:var(--panel2); padding:1px 5px; border-radius:4px; font-size:.85em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>｜けしゴム</h1>
+    <p class="desc">貼り付けたテキストから「｜」(強調用パイプ記号)をすべて取り除きます。入力すると自動で右側に反映されます。</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>入力 <span class="count" id="inCount">0文字</span></h2>
+      <textarea id="input" placeholder="ここにテキストを貼り付け…"></textarea>
+    </div>
+    <div class="panel">
+      <h2>出力(｜削除済み) <span class="count" id="outCount">0文字</span></h2>
+      <textarea id="output" readonly placeholder="ここに結果が表示されます"></textarea>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="primary" id="copyBtn">出力をコピー</button>
+    <button id="clearBtn">クリア</button>
+    <span class="status" id="status"></span>
+  </div>
+
+  <footer>
+    全角の「｜」と半角の「|」の両方を除去します。それ以外の文字は変更しません。
+  </footer>
+</div>
+
+<script>
+const input = document.getElementById('input');
+const output = document.getElementById('output');
+const inCount = document.getElementById('inCount');
+const outCount = document.getElementById('outCount');
+const status = document.getElementById('status');
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+function process(){
+  const raw = input.value;
+  const result = raw.replace(/[|｜]/g, '');
+  output.value = result;
+  inCount.textContent = raw.length + '文字';
+  outCount.textContent = result.length + '文字';
+}
+
+input.addEventListener('input', process);
+
+copyBtn.addEventListener('click', async () => {
+  try{
+    await navigator.clipboard.writeText(output.value);
+    status.textContent = 'コピーしました';
+    status.classList.add('ok');
+  }catch(e){
+    output.select();
+    document.execCommand('copy');
+    status.textContent = 'コピーしました';
+    status.classList.add('ok');
+  }
+  setTimeout(()=>{ status.textContent=''; status.classList.remove('ok'); }, 1800);
+});
+
+clearBtn.addEventListener('click', () => {
+  input.value=''; output.value='';
+  process();
+  input.focus();
+});
+
+process();
+</script>
+</body>
+</html>
